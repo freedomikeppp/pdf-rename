@@ -21,12 +21,22 @@ def get_exclusion_pages():
 def get_target_pdf_filenames():
 	'''
 	カレントディレクトリの変更対象となるpdfのソート済みリストを取得
+	ただし、ハイフン後の数字が2桁の場合は、左0詰めで3桁にリネーム
 
 	Return:
 		list: ページ(int)の配列
 	'''
 	re_pdf = re.compile('-[0-9]+\.pdf')
+	two_digits = re.compile('-[0-9][0-9]\.pdf')
 	target_files = [path for path in os.listdir(os.curdir) if re_pdf.search(path)]
+	# ハイフン後の数字が2桁の場合は、左0詰めで3桁にリネーム
+	for i in range(len(target_files)):
+		bef_filenm = target_files[i]
+		if two_digits.search(bef_filenm):
+			# exp) ***-01.pdf -> ***-001.pdf
+			aft_filenm = '-0'.join(bef_filenm.rsplit('-', 1))
+			os.rename(bef_filenm, aft_filenm)
+			target_files[i] = aft_filenm
 	target_files.sort()
 	return target_files
 
@@ -55,7 +65,7 @@ def rename_and_remove(target_files, exclusion_pages, del_flg=False):
 				if del_flg == True:
 					os.remove(file)
 				continue
-			
+
 			print(f'変換：{file} -> {page_count}.pdf')
 			os.rename(file, f'{page_count}.pdf')
 			page_count += 1
